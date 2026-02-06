@@ -5,7 +5,7 @@ function App() {
   const [items, setItems] = useState([]);
 
   useEffect(() => {
-    fetch('accordion-production.up.railway.app/api/procedures')
+    fetch('https://accordion-production.up.railway.app/api/procedures')
       .then(res => res.json())
       .then(data => setItems(data))
       .catch(err => console.error(err));
