@@ -2,6 +2,48 @@ import React, { useState, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
 import './App.css';
 
+const ContentRenderer = ({ content }) => {
+  if (!content) return null;
+
+  switch (content.type) {
+    case 'bulleted_list':
+      return (
+        <ul>
+          {content.items.map((item, index) => (
+            <li key={index}><ReactMarkdown>{item}</ReactMarkdown></li>
+          ))}
+        </ul>
+      );
+
+    case 'numbered_list':
+      return (
+        <ol>
+          {content.items.map((item, index) => (
+            <li key={index}><ReactMarkdown>{item}</ReactMarkdown></li>
+          ))}
+        </ol>
+      );
+
+    case 'lettered_list':
+      const startChar = content.start_char ? content.start_char.toLowerCase() : 'a';
+      
+      const startNum = startChar.charCodeAt(0) - 96;
+
+      return (
+        <ol style={{ listStyleType: 'lower-alpha' }} start={startNum}>
+          {content.items.map((item, index) => (
+            <li key={index}>
+              <ReactMarkdown>{item}</ReactMarkdown>
+            </li>
+          ))}
+        </ol>
+      );
+      
+    default:
+      return <div>Unsupported content type</div>;
+  }
+};
+
 function App() {
   const [items, setItems] = useState([]);
   const [openId, setOpenId] = useState(null);
@@ -45,7 +87,7 @@ function App() {
               </div>
               {isOpen && (
                 <div className="accordion-body">
-                  <ReactMarkdown>{item.content}</ReactMarkdown>
+                  <ContentRenderer content={item.content} />
                 </div>
               )}
             </div>

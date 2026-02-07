@@ -7,13 +7,16 @@ import (
 	"net/http"
 	"os"
 
+	"accordion-backend/migrations"
+
 	_ "github.com/lib/pq"
 )
 
 type Procedure struct {
-	ID      int    `json:"id"`
-	Title   string `json:"title"`
-	Content string `json:"content"`
+	ID        int             `json:"id"`
+	Title     string          `json:"title"`
+	Content   json.RawMessage `json:"content"`
+	SortOrder int             `json:"sort_order"`
 }
 
 func main() {
@@ -27,6 +30,10 @@ func main() {
 		log.Fatal(err)
 	}
 	defer db.Close()
+
+	if err := migrations.Run(db); err != nil {
+		log.Fatalf("failed to run migrations: %s", err)
+	}
 
 	http.HandleFunc("/api/procedures", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Access-Control-Allow-Origin", "*")

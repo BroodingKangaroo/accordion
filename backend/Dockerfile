@@ -1,11 +1,14 @@
-FROM golang:1.23-alpine AS builder
+FROM golang:1.24-alpine AS builder
 
 WORKDIR /app
 
-COPY go.mod go.sum ./
+COPY backend/go.mod backend/go.sum ./
+
 RUN go mod download
 
-COPY . .
+COPY backend/ .
+
+COPY db/ ./db/
 
 RUN go build -o main .
 
@@ -14,6 +17,7 @@ WORKDIR /root/
 
 COPY --from=builder /app/main .
 
-EXPOSE 8080
+COPY --from=builder /app/db/migrations ./db/migrations
 
+EXPOSE 8080
 CMD ["./main"]
