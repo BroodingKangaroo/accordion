@@ -27,9 +27,7 @@ const ContentRenderer = ({ content }) => {
 
     case 'lettered_list':
       const startChar = content.start_char ? content.start_char.toLowerCase() : 'a';
-      
       const startNum = startChar.charCodeAt(0) - 96;
-
       return (
         <ol style={{ listStyleType: 'lower-alpha' }} start={startNum}>
           {content.items.map((item, index) => (
@@ -47,7 +45,7 @@ const ContentRenderer = ({ content }) => {
 
 function App() {
   const [items, setItems] = useState([]);
-  const [openId, setOpenId] = useState(null);
+  const [openIds, setOpenIds] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -62,7 +60,7 @@ function App() {
       .then(data => {
         setItems(data);
         if (data && data.length > 0) {
-          setOpenId(data[0].id);
+          setOpenIds([data[0].id]);
         }
       })
       .catch(err => {
@@ -75,7 +73,14 @@ function App() {
   }, []);
 
   const handleToggle = (id) => {
-    setOpenId(openId === id ? null : id);
+    setOpenIds(prevOpenIds => {
+      if (prevOpenIds.includes(id)) {
+        return prevOpenIds.filter(existingId => existingId !== id);
+      } 
+      else {
+        return [...prevOpenIds, id];
+      }
+    });
   };
 
   return (
@@ -93,7 +98,7 @@ function App() {
       ) : (
         <div className="accordion">
           {items.map((item) => {
-            const isOpen = item.id === openId;
+            const isOpen = openIds.includes(item.id);
             return (
               <div key={item.id} className="accordion-item">
                 <div className="accordion-header" onClick={() => handleToggle(item.id)}>
