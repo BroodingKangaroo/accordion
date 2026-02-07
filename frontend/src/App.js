@@ -59,9 +59,6 @@ function App() {
       })
       .then(data => {
         setItems(data);
-        if (data && data.length > 0) {
-          setOpenIds([data[0].id]);
-        }
       })
       .catch(err => {
         console.error(err);
