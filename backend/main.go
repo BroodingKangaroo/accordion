@@ -6,10 +6,12 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"time"
 
 	"accordion-backend/migrations"
 
 	_ "github.com/lib/pq"
+	"github.com/patrickmn/go-cache"
 )
 
 type Procedure struct {
@@ -18,6 +20,8 @@ type Procedure struct {
 	Content   json.RawMessage `json:"content"`
 	SortOrder int             `json:"sort_order"`
 }
+
+var c = cache.New(5*time.Minute, 10*time.Minute)
 
 func main() {
 	dbURL := os.Getenv("DATABASE_URL")
@@ -38,7 +42,15 @@ func main() {
 	http.HandleFunc("/api/procedures", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Access-Control-Allow-Origin", "*")
 		w.Header().Set("Content-Type", "application/json")
+		w.Header().Set("Cache-Control", "public, max-age=60")
 
+		if cachedProcedures, found := c.Get("procedures"); found {
+			log.Println("Serving response from cache")
+			json.NewEncoder(w).Encode(cachedProcedures)
+			return
+		}
+
+		log.Println("Cache miss, querying database")
 		rows, err := db.Query("SELECT id, title, content FROM procedures ORDER BY sort_order ASC")
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -54,6 +66,7 @@ func main() {
 			}
 			procedures = append(procedures, p)
 		}
+		c.Set("procedures", procedures, cache.DefaultExpiration)
 		json.NewEncoder(w).Encode(procedures)
 	})
 
